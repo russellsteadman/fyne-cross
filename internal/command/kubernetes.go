@@ -33,7 +33,8 @@ type KubernetesContainerRunner struct {
 	s3Path       string
 	storageLimit resource.Quantity
 
-	noProjectUpload bool
+	noProjectUpload  bool
+	noResultDownload bool
 }
 
 func NewKubernetesContainerRunner(context Context) (ContainerRunner, error) {
@@ -54,13 +55,14 @@ func NewKubernetesContainerRunner(context Context) (ContainerRunner, error) {
 			vol:   context.Volume,
 			debug: context.Debug,
 		},
-		namespace:       context.Namespace,
-		s3Path:          context.S3Path,
-		noProjectUpload: context.NoProjectUpload,
-		aws:             aws,
-		kubectl:         kubectl,
-		config:          config,
-		storageLimit:    resource.MustParse(context.SizeLimit),
+		namespace:        context.Namespace,
+		s3Path:           context.S3Path,
+		noProjectUpload:  context.NoProjectUpload,
+		noResultDownload: context.NoResultDownload,
+		aws:              aws,
+		kubectl:          kubectl,
+		config:           config,
+		storageLimit:     resource.MustParse(context.SizeLimit),
 	}, nil
 }
 
@@ -334,17 +336,21 @@ func (i *KubernetesContainerImage) Finalize(packageName string) (ret error) {
 		}
 	}
 
-	// Download package result from S3 locally
-	distFile := volume.JoinPathHost(i.Runner.vol.DistDirHost(), i.GetID(), packageName)
-	err := os.MkdirAll(filepath.Dir(distFile), 0755)
-	if err != nil {
-		ret = fmt.Errorf("could not create the dist package dir: %v", err)
-		return
+	if !i.Runner.noResultDownload {
+		// Download package result from S3 locally
+		distFile := volume.JoinPathHost(i.Runner.vol.DistDirHost(), i.GetID(), packageName)
+		err := os.MkdirAll(filepath.Dir(distFile), 0755)
+		if err != nil {
+			ret = fmt.Errorf("could not create the dist package dir: %v", err)
+			return
+		}
+
+		log.Infof("Downloading result package to %s.", distFile)
+		ret = i.Runner.aws.DownloadFile(i.Runner.s3Path+"/"+packageName, distFile)
+
+		log.Infof("[✓] Package: %s", distFile)
+	} else {
+		log.Infof("[✓] Package available at : %q", i.Runner.s3Path+"/"+packageName)
 	}
-
-	log.Infof("Downloading result package to %s.", distFile)
-	ret = i.Runner.aws.DownloadFile(i.Runner.s3Path+"/"+packageName, distFile)
-
-	log.Infof("[✓] Package: %s", distFile)
 	return
 }
