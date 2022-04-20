@@ -182,12 +182,12 @@ func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDir
 				return fmt.Errorf("incorrect path")
 			}
 			// Replace top directory in the archive with local path
-			paths[1] = localRootDirectory
+			paths[0] = localRootDirectory
 			localFile := filepath.Join(paths...)
 
 			if f.IsDir() {
-				log.Println("Creating directory:", localFile)
 				if !Exists(localFile) {
+					log.Println("Creating directory:", localFile)
 					return os.Mkdir(localFile, f.Mode().Perm())
 				}
 				return nil
