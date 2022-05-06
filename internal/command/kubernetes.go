@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/fyne-io/fyne-cross/internal/cloud"
@@ -314,11 +315,21 @@ func (i *KubernetesContainerImage) Finalize(packageName string) (ret error) {
 
 	// Upload package result to S3
 	log.Infof("Uploading package %s to S3", packageName)
-	ret = i.Run(i.Runner.vol, Options{},
-		AddAWSParameters(i.Runner.aws,
-			"fyne-cross-s3", "upload-file",
-			volume.JoinPathContainer(i.Runner.vol.TmpDirContainer(), i.GetID(), packageName), i.Runner.s3Path+"/"+packageName),
-	)
+	// Darwin application are actually directory and we need
+	// to compress it in a format that Darwin understand by default
+	if strings.ToLower(filepath.Ext(packageName)) == ".app" {
+		ret = i.Run(i.Runner.vol, Options{},
+			AddAWSParameters(i.Runner.aws,
+				"fyne-cross-s3", "upload-directory",
+				volume.JoinPathContainer(i.Runner.vol.TmpDirContainer(), i.GetID(), packageName), i.Runner.s3Path+"/"+packageName+".tar.xz"),
+		)
+	} else {
+		ret = i.Run(i.Runner.vol, Options{},
+			AddAWSParameters(i.Runner.aws,
+				"fyne-cross-s3", "upload-file",
+				volume.JoinPathContainer(i.Runner.vol.TmpDirContainer(), i.GetID(), packageName), i.Runner.s3Path+"/"+packageName),
+		)
+	}
 	if ret != nil {
 		return
 	}

@@ -104,8 +104,21 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 		return err
 	}
 
+	extension := strings.ToLower(filepath.Ext(s3FilePath))
+
+	var compression archiver.Compression
+
+	switch extension {
+	case ".xz":
+		compression = archiver.Xz{}
+	case ".zstd":
+		compression = archiver.Zstd{}
+	default:
+		return fmt.Errorf("unknown extension for %v", s3FilePath)
+	}
+
 	format := archiver.CompressedArchive{
-		Compression: archiver.Zstd{},
+		Compression: compression,
 		Archival:    archiver.Tar{},
 	}
 
