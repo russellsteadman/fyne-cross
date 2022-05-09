@@ -216,7 +216,7 @@ func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDir
 			}
 			defer inFile.Close()
 
-			log.Println("Creating file", localFile)
+			log.Println(f.NameInArchive, "->", localFile)
 			outFile, err := os.Create(localFile)
 			if err != nil {
 				return err
