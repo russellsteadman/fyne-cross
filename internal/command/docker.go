@@ -207,7 +207,7 @@ func (i *LocalContainerImage) Finalize(packageName string) error {
 		return err
 	}
 
-	log.Infof("[✓] Package: %s", distFile)
+	log.Infof("[✓] Package: %q", distFile)
 
 	return nil
 }

@@ -359,7 +359,7 @@ func (i *KubernetesContainerImage) Finalize(packageName string) (ret error) {
 		log.Infof("Downloading result package to %s.", distFile)
 		ret = i.Runner.aws.DownloadFile(i.Runner.s3Path+"/"+packageName, distFile)
 
-		log.Infof("[✓] Package: %s", distFile)
+		log.Infof("[✓] Package: %q", distFile)
 	} else {
 		log.Infof("[✓] Package available at : %q", i.Runner.s3Path+"/"+packageName)
 	}
