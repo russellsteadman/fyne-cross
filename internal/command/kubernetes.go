@@ -143,7 +143,7 @@ func (i *KubernetesContainerImage) Run(vol volume.Volume, opts Options, cmdArgs 
 		Stdin:   true,
 		Stdout:  true,
 		Stderr:  true,
-		TTY:     true,
+		TTY:     false,
 	}
 	req.VersionedParams(
 		option,
@@ -157,7 +157,7 @@ func (i *KubernetesContainerImage) Run(vol volume.Volume, opts Options, cmdArgs 
 	log.Infof("Executing command %v", cmdArgs)
 	err = exec.Stream(remotecommand.StreamOptions{
 		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
+		Stdout: os.Stderr,
 		Stderr: os.Stderr,
 		Tty:    false,
 	})
