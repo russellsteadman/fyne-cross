@@ -190,10 +190,16 @@ func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDir
 
 	go func() {
 		err := format.Extract(context.Background(), in, nil, func(ctx context.Context, f archiver.File) error {
-			paths := strings.Split(f.NameInArchive, "/")
+			// Do not use strings.Split to split a path as it will generate empty string when given "//"
+			splitFn := func(c rune) bool {
+				return c == '/'
+			}
+			paths := strings.FieldsFunc(f.NameInArchive, splitFn)
+
 			if len(paths) == 0 {
 				return fmt.Errorf("incorrect path")
 			}
+
 			// Replace top directory in the archive with local path
 			paths[0] = localRootDirectory
 			localFile := filepath.Join(paths...)
