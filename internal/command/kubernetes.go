@@ -239,7 +239,11 @@ func (i *KubernetesContainerImage) Prepare() error {
 					ImagePullPolicy: v1.PullAlways,
 					Command:         []string{"/bin/bash"},
 					// The pod will stop itself after 30min
-					Args:         []string{"-c", "trap : TERM INT; sleep 1800 & wait"},
+					Args: []string{"-c", "trap : TERM INT; sleep 1800 & wait"},
+					Env: []v1.EnvVar{
+						{Name: "CGO_ENABLED", Value: "1"},                            // enable CGO
+						{Name: "GOCACHE", Value: i.Runner.vol.GoCacheDirContainer()}, // mount GOCACHE to reuse cache between builds
+					},
 					VolumeMounts: volumesMount,
 					WorkingDir:   i.Runner.vol.WorkDirContainer(),
 				},
